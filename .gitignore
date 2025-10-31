@@ -8,6 +8,8 @@
 
 # production
 /build
+# Keep docs for GitHub Pages
+# /docs
 
 # misc
 .DS_Store
