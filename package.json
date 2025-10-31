@@ -1,6 +1,7 @@
 {
   "name": "set-solitaire",
   "version": "1.0.0",
+  "homepage": "./",
   "description": "Single-player offline Set card game",
   "keywords": ["set game", "card game", "pattern matching", "offline game"],
   "main": "src/index.js",
@@ -18,7 +19,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && rm -rf docs && mv build docs",
+    "build": "react-scripts build && rm -rf docs && mv build docs && touch docs/.nojekyll",
     "test": "react-scripts test --env=jsdom",
     "format": "prettier --write ."
   },
