@@ -8,6 +8,7 @@ import FormControl from "@material-ui/core/FormControl";
 import Grid from "@material-ui/core/Grid";
 import IconButton from "@material-ui/core/IconButton";
 import InputLabel from "@material-ui/core/InputLabel";
+import Link from "@material-ui/core/Link";
 import MenuItem from "@material-ui/core/MenuItem";
 import Paper from "@material-ui/core/Paper";
 import Select from "@material-ui/core/Select";
@@ -38,23 +39,17 @@ import {
 import { formatANoun } from "../util";
 
 const useStyles = makeStyles((theme) => ({
-  sideColumn: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    [theme.breakpoints.up("md")]: {
-      maxHeight: 543,
-    },
-    [theme.breakpoints.down("sm")]: {
-      maxHeight: 435,
-    },
-    [theme.breakpoints.down("xs")]: {
-      maxHeight: 400,
+  header: {
+    padding: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    [theme.breakpoints.up("sm")]: {
+      display: "none", // Hide on desktop
     },
   },
   mainColumn: {
     display: "flex",
-    alignItems: "top",
+    alignItems: "center",
+    justifyContent: "center",
   },
   snackbar: {
     [theme.breakpoints.down("sm")]: {
@@ -86,16 +81,17 @@ const useStyles = makeStyles((theme) => ({
     right: theme.spacing(1),
     zIndex: 10,
   },
-  header: {
+  sidebarHeader: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: theme.spacing(2),
   },
-  leftSpacer: {
-    [theme.breakpoints.down("xs")]: {
-      display: "none",
-    },
+  footer: {
+    marginTop: theme.spacing(4),
+    padding: theme.spacing(2),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
   },
 }));
 
@@ -296,19 +292,17 @@ function GamePage() {
           onClose={handleClose}
         />
       </Snackbar>
-      <Grid container spacing={2}>
-        {/* Left spacer - hidden on mobile, visible on desktop for centering */}
-        <Box clone order={{ xs: 3, sm: 1 }}>
-          <Grid item xs={12} sm={4} md={3} className={classes.sideColumn}>
-            <Box className={classes.leftSpacer}>
-              {/* Empty space to center the board like the original */}
-            </Box>
-          </Grid>
-        </Box>
 
-        {/* Main game board */}
-        <Box clone order={{ xs: 1, sm: 2 }} position="relative">
-          <Grid item xs={12} sm={8} md={6} className={classes.mainColumn}>
+      {/* Header - only visible on mobile */}
+      <Paper className={classes.header} elevation={2}>
+        <Typography variant="h5" align="center" style={{ fontWeight: 500 }}>
+          Set Without Friends
+        </Typography>
+      </Paper>
+
+      <Grid container spacing={2}>
+        <Box clone order={{ xs: 1, sm: 1 }} position="relative">
+          <Grid item xs={12} md={9} className={classes.mainColumn}>
             {/* Backdrop; active when the game ends */}
             <div
               className={classes.doneOverlay}
@@ -347,12 +341,10 @@ function GamePage() {
             />
           </Grid>
         </Box>
-
-        {/* Right sidebar */}
-        <Box clone order={{ xs: 2, sm: 3 }}>
+        <Box clone order={{ xs: 2, sm: 2 }}>
           <Grid item xs={12} md={3}>
             <Paper className={classes.sidebar}>
-              <div className={classes.header}>
+              <div className={classes.sidebarHeader}>
                 <Typography variant="h6">
                   {modes[gameMode].name}
                 </Typography>
@@ -403,6 +395,20 @@ function GamePage() {
           </Grid>
         </Box>
       </Grid>
+
+      {/* Footer */}
+      <Box className={classes.footer}>
+        <Typography variant="body2">
+          The creator's best time is 01:17 ·{" "}
+          <Link 
+            href="https://github.com/agduan/SetWithoutFriends" 
+            style={{ color: "#1976d2" }}
+            underline="none"
+          >
+            GitHub
+          </Link>
+        </Typography>
+      </Box>
     </Container>
   );
 }
