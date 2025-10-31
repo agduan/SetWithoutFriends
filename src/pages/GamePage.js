@@ -38,10 +38,23 @@ import {
 import { formatANoun } from "../util";
 
 const useStyles = makeStyles((theme) => ({
+  sideColumn: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    [theme.breakpoints.up("md")]: {
+      maxHeight: 543,
+    },
+    [theme.breakpoints.down("sm")]: {
+      maxHeight: 435,
+    },
+    [theme.breakpoints.down("xs")]: {
+      maxHeight: 400,
+    },
+  },
   mainColumn: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "top",
   },
   snackbar: {
     [theme.breakpoints.down("sm")]: {
@@ -78,6 +91,11 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: theme.spacing(2),
+  },
+  leftSpacer: {
+    [theme.breakpoints.down("xs")]: {
+      display: "none",
+    },
   },
 }));
 
@@ -279,8 +297,18 @@ function GamePage() {
         />
       </Snackbar>
       <Grid container spacing={2}>
-        <Box clone order={{ xs: 1, sm: 1 }} position="relative">
-          <Grid item xs={12} md={9} className={classes.mainColumn}>
+        {/* Left spacer - hidden on mobile, visible on desktop for centering */}
+        <Box clone order={{ xs: 3, sm: 1 }}>
+          <Grid item xs={12} sm={4} md={3} className={classes.sideColumn}>
+            <Box className={classes.leftSpacer}>
+              {/* Empty space to center the board like the original */}
+            </Box>
+          </Grid>
+        </Box>
+
+        {/* Main game board */}
+        <Box clone order={{ xs: 1, sm: 2 }} position="relative">
+          <Grid item xs={12} sm={8} md={6} className={classes.mainColumn}>
             {/* Backdrop; active when the game ends */}
             <div
               className={classes.doneOverlay}
@@ -319,7 +347,9 @@ function GamePage() {
             />
           </Grid>
         </Box>
-        <Box clone order={{ xs: 2, sm: 2 }}>
+
+        {/* Right sidebar */}
+        <Box clone order={{ xs: 2, sm: 3 }}>
           <Grid item xs={12} md={3}>
             <Paper className={classes.sidebar}>
               <div className={classes.header}>
