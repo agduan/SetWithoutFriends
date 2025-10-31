@@ -41,6 +41,10 @@ function makeKeyboardLayout(keyboardLayoutName, customKeyboardLayout) {
 }
 
 function App() {
+  // Detect if device is desktop/laptop (wide screen) for default layout
+  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+  const defaultLayout = isDesktop ? "landscape" : "portrait";
+
   const [themeType, setThemeType] = useStorage("theme", "light");
   const [rawCustomCardColors, setCustomCardColors] = useStorage(
     "customColors",
@@ -64,13 +68,13 @@ function App() {
   );
   const [layoutOrientation, setLayoutOrientation] = useStorage(
     "layout",
-    "portrait"
+    defaultLayout
   );
   const [cardOrientation, setCardOrientation] = useStorage(
     "orientation",
     "vertical"
   );
-  const [volume, setVolume] = useStorage("volume", "on");
+  const [volume, setVolume] = useStorage("volume", "off");
 
   return (
     <ThemeProvider
