@@ -1,8 +1,6 @@
 import { blueGrey, grey, indigo, red } from "@material-ui/core/colors";
 import { createTheme } from "@material-ui/core/styles";
 
-import leavesLightImage from "./assets/leaves-light.png";
-
 export const darkTheme = createTheme({
   palette: {
     type: "dark",
@@ -65,15 +63,6 @@ export const darkTheme = createTheme({
     row: "#282828",
   },
   setFoundEntry: "rgba(130, 170, 100, 0.15)",
-  overrides: {
-    MuiCssBaseline: {
-      "@global": {
-        body: {
-          backgroundImage: `url("${leavesLightImage}")`,
-        },
-      },
-    },
-  },
 });
 
 export const lightTheme = createTheme({
@@ -125,15 +114,6 @@ export const lightTheme = createTheme({
     row: "#fff",
   },
   setFoundEntry: "rgba(130, 170, 100, 0.15)",
-  overrides: {
-    MuiCssBaseline: {
-      "@global": {
-        body: {
-          backgroundImage: `url("${leavesLightImage}")`,
-        },
-      },
-    },
-  },
 });
 
 export function withCardColors(theme, colors) {

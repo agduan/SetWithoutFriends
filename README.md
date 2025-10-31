@@ -1,97 +1,93 @@
-# Set with Forks
+# Set Solitaire
 
-![Logo](https://i.imgur.com/YTldFYX.png)
+A single-player, offline version of the classic Set card game. This game runs entirely in your browser with no backend or database required.
 
-This is the source code for [Set with Forks](https://setwithfriends.com/), an
-online, multiplayer implementation of the real-time card game
-[Set](<https://en.wikipedia.org/wiki/Set_(card_game)>). Your goal is to find
-triplets of cards that follow a certain pattern as quickly as possible.
+## Features
 
-- [Web version](https://setwithfriends.com/)
-- [Official Discord](https://discord.gg/XbjJyc9)
+- 🎮 **Multiple Game Modes**: Choose from 15+ different Set game variants including Normal, Junior, UltraSet, 4Set, Puzzle modes, and more
+- 📱 **Mobile-First Design**: Optimized for mobile devices and touch interfaces
+- 🔊 **Sound Effects**: Audio feedback for correct and incorrect sets (toggle in settings)
+- ⌨️ **Keyboard Shortcuts**: Fast gameplay with keyboard controls (customizable layouts)
+- 🎨 **Customizable Settings**: Sound toggle, board layout (portrait/landscape), card orientation, and keyboard layouts
+- 💾 **Offline Play**: No internet connection required
+- 📊 **Score Tracking**: Track your score and completion time
 
-## Technical Details
+## How to Play
 
-This app was built on a serverless stack primarily using the
-[Firebase Realtime Database](https://firebase.google.com/docs/database), along
-with [Firebase Cloud Functions](https://firebase.google.com/docs/functions) for
-more complex or sensitive operations. The frontend was built with
-[React](https://reactjs.org/), with components from
-[Material UI](https://material-ui.com/).
+1. Find three cards that form a "Set" - each of the four properties (color, shape, shading, number) must be either all the same or all different across the three cards
+2. Click or tap cards to select them
+3. When you select three cards that form a valid set, they'll be removed and replaced with new cards
+4. The game ends when no more sets can be found
 
-Code for the frontend is written in JavaScript and located in the `src/` folder,
-while serverless functions are written in TypeScript and located in the
-`functions/` folder.
+## Getting Started
 
-The latest development version of the code is on the `main` branch. We use
-GitHub Actions to automate our build and deployment process on Netlify, after a
-new release is created with version number `vA.B.C`.
+### Installation
 
-## Contributing
+1. Install dependencies:
+```bash
+npm install
+```
 
-This game is in active development, and we welcome contributions from developers
-of all backgrounds. I would recommend talking to us on
-[Discord](https://discord.gg/XbjJyc9) or submitting an issue if you want to see
-a new feature added. If you would like to help by contributing code, that's
-great – we would be happy to set up a time to chat!
+2. Start the development server:
+```bash
+npm start
+```
 
-To build the site for development:
+3. Build for production:
+```bash
+npm build
+```
 
-> **NOTE:** If you are on Windows, I recommend installing
-> [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) and using the
-> resulting Linux environment for better developer experience. However, recent
-> versions of the fork run on Windows directly as well.
+The app will be available at `http://localhost:3000`
 
-- Install Node.js 20 and npm 10. Use these exact versions, though newer versions
-  _might_ work.
-- Install Java version 11 or higher.
-- Run `npm install -g firebase-tools` to globally install the Firebase CLI.
-- Run `npm install` in the root folder to get dependencies.
-- Run `npm install` in the `functions` folder.
-- To start the project, run `npm run dev` in the root folder. This runs a
-  script, which is responsible for doing several things concurrently:
-  - Build the TypeScript cloud functions in watch mode.
-  - Start the Firebase Local Emulator Suite.
-  - Start the frontend with React Fast Refresh enabled.
+## Game Modes
 
-This will open the game in the browser at http://localhost:3000. The first time
-the database will be empty, so you will not see any games or chat messages, but
-everything should work. Try starting a game or posting a message. If something
-does not work, check for errors in the developer tools (in Chrome: press
-`Ctrl+Shift+I` or `F12` and switch to the "Console" tab) and in the terminal
-window where you ran `npm`. Feel free to reach out for help. When asking for
-help, please explain what you did, what happened, and attach the
-`firebase-debug.log` file from the root folder and screenshots of both the
-devtools console and the terminal.
+- **Normal**: Classic Set with 4 traits (12 cards)
+- **Junior**: Simplified version with 3 traits (9 cards)
+- **Set-Chain**: Each set must use 1 card from the previous set
+- **UltraSet**: Find 4 cards where pairs form sets with the same additional card
+- **Puzzle**: Find all sets on the board before advancing
+- **Memory**: Cards dealt face-down, revealed 3 at a time
+- **Shuffle**: Cards shuffle after each set
+- And many more!
 
-You should also be able to access the Emulator UI at http://localhost:4000,
-which contains useful information and allows you to inspect/modify the database
-during development. Changes to client code in `src` should be immediately
-visible, as well as changes to code in `functions`.
+## Settings
 
-Please make all pull requests with new features or bugfixes to the `main`
-branch. We are formatting code using [Prettier](https://prettier.io/), so you
-should run `npm run format` on your code before making a pull request.
+Click the **⚙️ Settings** button in the top-right corner to access:
 
-## Deployment
+- **Sound Effects**: Toggle sounds on/off
+- **Board Layout**: Portrait (3 columns) or Landscape (3 rows)
+- **Card Orientation**: Vertical or Horizontal (rotated 90°)
+- **Keyboard Layout**: QWERTY, AZERTY, QWERTZ, Dvorak, Colemak, Workman, or Neo
 
-As mentioned above, the latest changes to the `main` branch are deployed
-automatically to Netlify using the `npm run build` script. If you try to run
-this locally, it will not work due to protections on the production database.
-Instead, you can preview a release build configured to connect to the local
-emulator suite using the `npm run build:dev` script.
+All settings are automatically saved to your browser's local storage.
 
-The other parts of the app (serverless functions, database rules) are deployed
-to production using GitHub Actions on the `main` branch. The
-[staging environment](https://setwithfriends-dev.web.app/) gets automatic deploy
-previews when CI on the `main` branch passes. It is useful for seeing the latest
-version of the app and making sure that nothing is broken before releasing to
-production.
+## Keyboard Shortcuts
+
+- Press the keys shown on the board to select cards (default QWERTY layout)
+- Press `Space` or `Escape` to clear your selection
+- Change keyboard layout in the settings dialog
+
+## Mobile Installation
+
+To install this app on your mobile device:
+
+1. Build the production version: `npm run build`
+2. Deploy the `build` folder to any static hosting service
+3. Visit the URL on your mobile device
+4. Add to home screen for a native app-like experience
+
+## Technologies
+
+- React 17
+- Material-UI 4
+- React Spring (animations)
+- Local Storage for settings persistence
 
 ## License
 
-Built by [Eric Zhang](https://github.com/ekzhang) and
-[Cynthia Du](https://github.com/cynthiakedu).
+MIT License - See LICENSE.txt for details
 
-All source code is available under the [MIT License](LICENSE.txt). We are not
-affiliated with _Set Enterprises, Inc._, or the SET® card game.
+---
+
+Enjoy playing Set Solitaire! 🎉

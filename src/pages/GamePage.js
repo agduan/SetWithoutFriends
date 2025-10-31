@@ -1,32 +1,32 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Redirect } from "react-router-dom";
 import useSound from "use-sound";
 
 import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
+import FormControl from "@material-ui/core/FormControl";
 import Grid from "@material-ui/core/Grid";
+import IconButton from "@material-ui/core/IconButton";
+import InputLabel from "@material-ui/core/InputLabel";
+import MenuItem from "@material-ui/core/MenuItem";
 import Paper from "@material-ui/core/Paper";
+import Select from "@material-ui/core/Select";
 import Snackbar from "@material-ui/core/Snackbar";
-import Tooltip from "@material-ui/core/Tooltip";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
+import SettingsIcon from "@material-ui/icons/Settings";
+import RefreshIcon from "@material-ui/icons/Refresh";
 
 import failSfx1 from "../assets/failedSetSound1.mp3";
 import failSfx2 from "../assets/failedSetSound2.mp3";
 import failSfx3 from "../assets/failedSetSound3.mp3";
 import foundSfx from "../assets/successfulSetSound.mp3";
-import Chat from "../components/Chat";
 import Game from "../components/Game";
-import GameSidebar from "../components/GameSidebar";
-import Loading from "../components/Loading";
+import SettingsDialog from "../components/SettingsDialog";
 import SnackContent from "../components/SnackContent";
-import User from "../components/User";
-import { SettingsContext, UserContext } from "../context";
-import firebase, { createGame, finishGame } from "../firebase";
+import { SettingsContext } from "../context";
 import {
   addCard,
-  cardsFromEvent,
   computeState,
   eventFromCards,
   findSet,
@@ -35,30 +35,13 @@ import {
   modes,
   removeCard,
 } from "../game";
-import useFirebaseRef from "../hooks/useFirebaseRef";
-import useKeydown, { getModifierState } from "../hooks/useKeydown";
-import { formatANoun, sleep } from "../util";
-import LoadingPage from "./LoadingPage";
-import NotFoundPage from "./NotFoundPage";
+import { formatANoun } from "../util";
 
 const useStyles = makeStyles((theme) => ({
-  sideColumn: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    [theme.breakpoints.up("md")]: {
-      maxHeight: 543,
-    },
-    [theme.breakpoints.down("sm")]: {
-      maxHeight: 435,
-    },
-    [theme.breakpoints.down("xs")]: {
-      maxHeight: 400,
-    },
-  },
   mainColumn: {
     display: "flex",
-    alignItems: "top",
+    alignItems: "center",
+    justifyContent: "center",
   },
   snackbar: {
     [theme.breakpoints.down("sm")]: {
@@ -80,55 +63,55 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(3),
     textAlign: "center",
   },
+  sidebar: {
+    padding: theme.spacing(2),
+    height: "100%",
+  },
+  settingsButton: {
+    position: "absolute",
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+    zIndex: 10,
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing(2),
+  },
 }));
 
-function getNextGameId(gameId) {
-  const idx = gameId.lastIndexOf("-");
-  let id = gameId,
-    num = 0;
-  if (gameId.slice(idx + 1).match(/[0-9]+/)) {
-    id = gameId.slice(0, idx);
-    num = parseInt(gameId.slice(idx + 1));
-  }
-  return `${id}-${num + 1}`;
+// Generate a seed for the random number generator
+function generateSeed() {
+  const hex = () => Math.floor(Math.random() * 0x100000000).toString(16).padStart(8, '0');
+  return `v1:${hex()}${hex()}${hex()}${hex()}`;
 }
 
-function ensureConnected() {
-  return new Promise((resolve) => {
-    const ref = firebase.database().ref(".info/connected");
-    let wasConnected = true;
-    const update = (snap) => {
-      if (snap.val() === true) {
-        ref.off("value", update);
-        resolve(wasConnected);
-      } else {
-        wasConnected = false;
-      }
-    };
-    ref.on("value", update);
-  });
-}
-
-function GamePage({ match }) {
-  const user = useContext(UserContext);
-  const { volume, notifications, focusMode } = useContext(SettingsContext);
-  const gameId = match.params.id;
-  const nextGameId = useMemo(() => getNextGameId(gameId), [gameId]);
+function GamePage() {
+  const { volume } = useContext(SettingsContext);
   const classes = useStyles();
 
-  const [waiting, setWaiting] = useState(false);
-  const [redirect, setRedirect] = useState(null);
+  const [gameMode, setGameMode] = useState("normal");
   const [selected, setSelected] = useState([]);
   const clearSelected = useRef(false);
   const [snack, setSnack] = useState({ open: false });
+  const [score, setScore] = useState(0);
+  const [gameStartTime, setGameStartTime] = useState(Date.now());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  
+  // Initialize game data
+  const [gameData, setGameData] = useState(() => {
+    const seed = generateSeed();
+    const random = makeRandom(seed);
+    const deck = generateDeck(gameMode, random);
+    return {
+      seed,
+      deck,
+      events: {},
+    };
+  });
 
-  const [game, loadingGame] = useFirebaseRef(`games/${gameId}`);
-  const [gameData, loadingGameData] = useFirebaseRef(`gameData/${gameId}`);
-  const [hasNextGame] = useFirebaseRef(
-    game?.status === "done" && (!game.users || !(user.id in game.users))
-      ? `games/${nextGameId}/status`
-      : null
-  );
   const [playSuccess] = useSound(foundSfx);
   const [playFail1] = useSound(failSfx1);
   const [playFail2] = useSound(failSfx2);
@@ -136,155 +119,63 @@ function GamePage({ match }) {
   const playFail = () =>
     [playFail1, playFail2, playFail3][Math.floor(Math.random() * 3)]();
 
-  // Reset card selection on update to game events
-  const numEvents = Object.keys(gameData?.events || {}).length;
+  // Update timer every second
   useEffect(() => {
-    setSelected([]);
-    clearSelected.current = false;
-  }, [numEvents]);
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  // Terminate the game if no sets are remaining
-  const [finished, setFinished] = useState({ gameId: "", error: "" });
-  useEffect(() => {
-    if (finished.gameId === gameId) {
-      // Attempt to finish the game a few times before giving up
-      (async () => {
-        const numRetries = 10;
-        for (let i = 0; i < numRetries; i++) {
-          try {
-            await finishGame({ gameId });
-            break;
-          } catch (error) {
-            if (i === numRetries - 1) {
-              setFinished({ gameId, error: error + "" });
-            } else if (await ensureConnected()) {
-              await sleep(100 * Math.pow(1.5, i));
-            }
-          }
-        }
-      })();
-    }
-  }, [finished.gameId, gameId]);
-
-  useKeydown((event) => {
-    if (getModifierState(event) === "Control") {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        handlePlayAgain();
-      } else if (event.key === "q") {
-        event.preventDefault();
-        setRedirect("/");
-      } else if (event.key === "p") {
-        event.preventDefault();
-        togglePause();
-      }
-    }
-  });
-
-  const gameMode = game?.mode || "normal";
   const { random, deck } = useMemo(() => {
-    const random = gameData?.seed && makeRandom(gameData.seed);
+    const random = makeRandom(gameData.seed);
     return {
       random,
-      deck: gameData?.deck ?? (random && generateDeck(gameMode, random)),
+      deck: gameData.deck,
     };
-  }, [gameMode, gameData?.deck, gameData?.seed]);
+  }, [gameData.seed, gameData.deck]);
 
   const {
     current,
     scores,
-    lastEvents,
-    history,
     board,
     answer,
     findState,
-    lastKeptSet,
   } = useMemo(() => {
     if (!gameData) return {};
     const state = computeState({ ...gameData, random, deck }, gameMode);
-    const { current, boardSize, findState, history } = state;
+    const { current, boardSize, findState } = state;
     const board = current.slice(0, boardSize);
     const answer = findSet(board, gameMode, findState);
-    const lastKeptSet =
-      modes[gameMode].puzzle &&
-      history.length &&
-      !history[history.length - 1].kind
-        ? cardsFromEvent(history[history.length - 1])
-        : null;
-    return { ...state, board, answer, lastKeptSet };
+    return { ...state, board, answer, findState };
   }, [gameMode, gameData, random, deck]);
 
-  if (redirect) return <Redirect push to={redirect} />;
-
-  if (loadingGame || loadingGameData) {
-    return <LoadingPage />;
-  }
-
-  if (!game || !gameData) {
-    return <NotFoundPage />;
-  }
-
-  if (game.status === "waiting") {
-    return (
-      <Container>
-        <Box p={4}>
-          <Typography variant="h4" align="center">
-            Waiting for the game to start...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-
-  const numHints = gameData.hints ?? 0;
-  const paused = gameData.pause?.start && !gameData.pause.end;
-  const spectating = !game.users || !(user.id in game.users);
-  const leaderboard = Object.keys(game.users).sort(
-    (u1, u2) =>
-      (scores[u2] || 0) - (scores[u1] || 0) ||
-      (lastEvents[u1] || 0) - (lastEvents[u2] || 0)
-  );
+  const gameEnded = !answer;
 
   function handleSet(cards) {
-    const event = eventFromCards(cards);
-    firebase.analytics().logEvent("find_set", event);
-    if (numHints) {
-      firebase.database().ref(`gameData/${gameId}/hints`).remove();
-    }
-    firebase
-      .database()
-      .ref(`gameData/${gameId}/events`)
-      .push({
-        ...event,
-        user: user.id,
-        time: firebase.database.ServerValue.TIMESTAMP,
-      });
-  }
-
-  const hint = game.enableHint && answer ? answer.slice(0, numHints) : null;
-  const gameEnded = !answer || game.status === "done";
-  if (
-    !answer &&
-    game.users &&
-    user.id in game.users &&
-    game.status === "ingame" &&
-    finished.gameId !== gameId
-  ) {
-    setFinished({ gameId, error: "" });
+    const event = {
+      ...eventFromCards(cards),
+      user: "player",
+      time: Date.now(),
+    };
+    
+    // Add event to game data
+    setGameData((prevData) => ({
+      ...prevData,
+      events: {
+        ...prevData.events,
+        [Date.now()]: event,
+      },
+    }));
+    
+    setScore((s) => s + 1);
   }
 
   function handleClick(card) {
-    if (gameEnded || paused) {
+    if (gameEnded) {
       return;
     }
-    if (spectating) {
-      setSnack({
-        open: true,
-        variant: "warning",
-        message: "You are spectating!",
-      });
-      return;
-    }
+
     setSelected((selected) => {
       if (clearSelected.current) {
         selected = [];
@@ -300,29 +191,26 @@ function GamePage({ match }) {
         case "set":
           handleSet(state.cards);
           if (volume === "on") playSuccess();
-          if (notifications === "on") {
-            setSnack({
-              open: true,
-              variant: "success",
-              message: `Found ${formatANoun(state.setType)}`,
-            });
-          }
+          setSnack({
+            open: true,
+            variant: "success",
+            message: `Found ${formatANoun(state.setType)}`,
+          });
           return [];
         case "error":
           if (volume === "on") playFail();
-          if (notifications === "on") {
-            setSnack({
-              open: true,
-              variant: "error",
-              message: state.error,
-            });
-          }
+          setSnack({
+            open: true,
+            variant: "error",
+            message: state.error,
+          });
           if (gameMode === "memory") {
             clearSelected.current = true;
             return state.cards;
           }
           return [];
-        // no default
+        default:
+          return selected;
       }
     });
   }
@@ -336,63 +224,44 @@ function GamePage({ match }) {
     setSnack({ ...snack, open: false });
   }
 
-  function handleAddHint() {
-    if (!game.enableHint || gameEnded || paused) {
-      return;
+  function handleNewGame(newMode) {
+    const seed = generateSeed();
+    const random = makeRandom(seed);
+    const deck = generateDeck(newMode || gameMode, random);
+    setGameData({
+      seed,
+      deck,
+      events: {},
+    });
+    setScore(0);
+    setGameStartTime(Date.now());
+    setSelected([]);
+    if (newMode) {
+      setGameMode(newMode);
     }
-    firebase
-      .database()
-      .ref(`gameData/${gameId}/hints`)
-      .set(numHints + 1);
   }
 
-  function togglePause() {
-    if (!game.enableHint || gameEnded) {
-      return;
-    }
-    firebase
-      .database()
-      .ref(`gameData/${gameId}/pause`)
-      .transaction((pause) => {
-        pause ??= {};
-        if (pause.end) {
-          pause.previous = (pause.previous ?? 0) + (pause.end - pause.start);
-          pause.start = pause.end = null;
-        }
-        pause[pause.start ? "end" : "start"] =
-          firebase.database.ServerValue.TIMESTAMP;
-        return pause;
-      });
-  }
-
-  async function handlePlayAgain() {
-    if (game?.status !== "done" || (spectating && !hasNextGame) || waiting) {
-      return;
-    }
-    if (!spectating) {
-      setWaiting(true);
-      const newGame = {
-        gameId: nextGameId,
-        access: game.access,
-        mode: game.mode,
-        enableHint: game.enableHint,
-      };
-      firebase.analytics().logEvent("play_again", newGame);
-      try {
-        await createGame(newGame);
-      } catch (error) {
-        if (error.code !== "functions/already-exists") {
-          alert(error.toString());
-          setWaiting(false);
-          return;
-        }
-      }
-    }
-    setRedirect(`/room/${nextGameId}`);
-  }
+  const elapsedTime = Math.floor((currentTime - gameStartTime) / 1000);
+  const minutes = Math.floor(elapsedTime / 60);
+  const seconds = elapsedTime % 60;
 
   return (
     <Container>
+      {/* Settings Button */}
+      <IconButton
+        className={classes.settingsButton}
+        onClick={() => setSettingsOpen(true)}
+        color="primary"
+        title="Settings"
+      >
+        <SettingsIcon />
+      </IconButton>
+
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
+
       <Snackbar
         anchorOrigin={{
           vertical: "bottom",
@@ -410,69 +279,31 @@ function GamePage({ match }) {
         />
       </Snackbar>
       <Grid container spacing={2}>
-        <Box clone order={{ xs: 3, sm: 1 }}>
-          <Grid item xs={12} sm={4} md={3} className={classes.sideColumn}>
-            {(focusMode !== "on" || gameEnded) && (
-              <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
-                <Chat
-                  title="Game Chat"
-                  messageLimit={200}
-                  gameId={gameId}
-                  history={history}
-                  startedAt={game.startedAt}
-                  gameMode={gameMode}
-                />
-              </Paper>
-            )}
-          </Grid>
-        </Box>
-        <Box clone order={{ xs: 1, sm: 2 }} position="relative">
-          <Grid item xs={12} sm={8} md={6} className={classes.mainColumn}>
-            {/* Backdrop; active when the game ends or is paused */}
+        <Box clone order={{ xs: 1, sm: 1 }} position="relative">
+          <Grid item xs={12} md={9} className={classes.mainColumn}>
+            {/* Backdrop; active when the game ends */}
             <div
               className={classes.doneOverlay}
-              style={{ display: gameEnded || paused ? "flex" : "none" }}
+              style={{ display: gameEnded ? "flex" : "none" }}
             >
               <Paper elevation={3} className={classes.doneModal}>
                 <Typography variant="h5" gutterBottom>
-                  The game {gameEnded ? "has ended" : "is paused"}.
+                  Game Complete!
                 </Typography>
-                {!gameEnded ? null : game.status !== "done" ? (
-                  finished.error || <Loading />
-                ) : (
-                  <div>
-                    <Typography variant="body1">
-                      Winner: <User id={leaderboard[0]} />
-                    </Typography>
-                    {leaderboard.length >= 2 && (
-                      <Typography variant="body2">
-                        Runner-up: <User id={leaderboard[1]} />
-                      </Typography>
-                    )}
-                    {(!spectating || hasNextGame) && (
-                      <Tooltip
-                        placement="top"
-                        title="Create or join a new game with the same settings. (Ctrl+Enter)"
-                      >
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={handlePlayAgain}
-                          style={{ marginTop: 12 }}
-                          disabled={waiting}
-                        >
-                          {waiting ? (
-                            <Loading />
-                          ) : spectating ? (
-                            "Next Game"
-                          ) : (
-                            "Play Again"
-                          )}
-                        </Button>
-                      </Tooltip>
-                    )}
-                  </div>
-                )}
+                <Typography variant="body1">
+                  Score: {score} sets
+                </Typography>
+                <Typography variant="body2">
+                  Time: {minutes}:{seconds.toString().padStart(2, '0')}
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleNewGame()}
+                  style={{ marginTop: 12 }}
+                >
+                  New Game
+                </Button>
               </Paper>
             </div>
 
@@ -483,63 +314,62 @@ function GamePage({ match }) {
               onClick={handleClick}
               onClear={handleClear}
               lastSet={findState.lastSet}
-              lastKeptSet={lastKeptSet}
-              answer={hint}
               remaining={current.length - board.length}
-              faceDown={paused ? "all" : gameMode === "memory" ? "deal" : ""}
+              faceDown={gameMode === "memory" ? "deal" : ""}
             />
           </Grid>
         </Box>
-        <Box clone order={{ xs: 2, sm: 3 }}>
-          <Grid item xs={12} md={3} className={classes.sideColumn}>
-            {(focusMode !== "on" || gameEnded) && (
-              <Box order={{ xs: 2, md: 1 }} style={{ maxHeight: "100%" }}>
-                <GameSidebar
-                  game={game}
-                  scores={scores}
-                  leaderboard={leaderboard}
-                  pause={gameData.pause}
-                  endedAt={
-                    game.status === "done"
-                      ? game.endedAt
-                      : !answer && history.length > 0
-                        ? history[history.length - 1].time
-                        : 0
-                  }
-                />
-              </Box>
-            )}
-            {game.enableHint && (
-              <Box order={{ xs: 1, md: 2 }}>
-                <Box mt={{ xs: 0, md: 2 }} mb={1}>
-                  <Button
-                    size="large"
-                    variant="contained"
-                    fullWidth
-                    disabled={user.id !== game.host || gameEnded}
-                    onClick={togglePause}
+        <Box clone order={{ xs: 2, sm: 2 }}>
+          <Grid item xs={12} md={3}>
+            <Paper className={classes.sidebar}>
+              <div className={classes.header}>
+                <Typography variant="h6">
+                  {modes[gameMode].name}
+                </Typography>
+              </div>
+              <Typography variant="body2" paragraph>
+                {modes[gameMode].description}
+              </Typography>
+              <Typography variant="body1" gutterBottom>
+                <strong>Score:</strong> {score}
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                <strong>Time:</strong> {minutes}:{seconds.toString().padStart(2, '0')}
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                <strong>Remaining:</strong> {current.length - board.length} cards
+              </Typography>
+              
+              <Box mt={3}>
+                <FormControl fullWidth variant="outlined" size="small">
+                  <InputLabel id="mode-select-label">Game Mode</InputLabel>
+                  <Select
+                    labelId="mode-select-label"
+                    value={gameMode}
+                    onChange={(e) => handleNewGame(e.target.value)}
+                    label="Game Mode"
                   >
-                    {paused ? "Resume" : "Pause"} Game
-                  </Button>
-                </Box>
-                <Box mb={2}>
-                  <Button
-                    size="large"
-                    variant="contained"
-                    fullWidth
-                    disabled={
-                      user.id !== game.host ||
-                      paused ||
-                      gameEnded ||
-                      numHints >= answer.length
-                    }
-                    onClick={handleAddHint}
-                  >
-                    Add hint: {numHints}
-                  </Button>
-                </Box>
+                    {Object.keys(modes).map((mode) => (
+                      <MenuItem key={mode} value={mode}>
+                        {modes[mode].name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
-            )}
+
+              <Box mt={2}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  startIcon={<RefreshIcon />}
+                  onClick={() => handleNewGame()}
+                >
+                  Restart Game
+                </Button>
+              </Box>
+            </Paper>
           </Grid>
         </Box>
       </Grid>

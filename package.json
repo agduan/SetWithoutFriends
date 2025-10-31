@@ -1,47 +1,25 @@
 {
-  "name": "setwithfriends",
+  "name": "set-solitaire",
   "version": "1.0.0",
-  "repository": "https://github.com/eltoder/setwithfriends",
-  "license": "MIT",
-  "description": "Online, real-time set application hosted on Firebase.",
-  "keywords": [],
+  "description": "Single-player offline Set card game",
+  "keywords": ["set game", "card game", "pattern matching", "offline game"],
   "main": "src/index.js",
   "dependencies": {
     "@material-ui/core": "^4.12.3",
     "@material-ui/icons": "^4.11.2",
     "@react-spring/web": "^9.7.5",
-    "@stripe/stripe-js": "^1.25.0",
-    "chart.js": "^3.7.1",
-    "clsx": "^1.1.1",
-    "firebase": "^9.6.9",
-    "moment": "^2.29.1",
-    "obscenity": "^0.4.4",
-    "project-name-generator": "^2.1.9",
     "react": "^17.0.2",
-    "react-chartjs-2": "^4.0.1",
-    "react-color": "^2.19.3",
     "react-dom": "^17.0.2",
-    "react-router-dom": "^5.3.0",
     "react-scripts": "5.0.0",
     "use-sound": "^4.0.1"
   },
   "devDependencies": {
-    "@google-cloud/pubsub": "^2.19.0",
-    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
-    "cross-env": "^7.0.3",
     "prettier": "^3.4.2"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
   },
   "scripts": {
     "start": "react-scripts start",
-    "dev": "node rundev.js",
-    "build:dev": "react-scripts build",
-    "build:staging": "cross-env REACT_APP_ENV=staging react-scripts build",
-    "build:prod": "cross-env REACT_APP_ENV=production react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
     "format": "prettier --write ."
   },
   "browserslist": [
@@ -49,9 +27,5 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ],
-  "engines": {
-    "node": "20",
-    "npm": "10"
-  }
+  ]
 }
