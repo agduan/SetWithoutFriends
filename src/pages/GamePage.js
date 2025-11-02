@@ -294,7 +294,7 @@ function GamePage() {
       </Snackbar>
 
       {/* Header - only visible on mobile */}
-      <Paper className={classes.header} elevation={2}>
+      <Paper className={classes.header} elevation={0}>
         <Typography variant="h5" align="center" style={{ fontWeight: 500 }}>
           Set Without Friends
         </Typography>
@@ -310,7 +310,7 @@ function GamePage() {
             >
               <Paper elevation={3} className={classes.doneModal}>
                 <Typography variant="h5" gutterBottom>
-                  Game Complete!
+                  Game complete!
                 </Typography>
                 <Typography variant="body1">
                   Score: {score} sets
