@@ -168,13 +168,14 @@ function GamePage() {
     board,
     answer,
     findState,
+    history,
   } = useMemo(() => {
     if (!gameData) return {};
     const state = computeState({ ...gameData, random, deck }, gameMode);
-    const { current, boardSize, findState } = state;
+    const { current, boardSize, findState, history } = state;
     const board = current.slice(0, boardSize);
     const answer = findSet(board, gameMode, findState);
-    return { ...state, board, answer, findState };
+    return { ...state, board, answer, findState, history };
   }, [gameMode, gameData, random, deck]);
 
   const gameEnded = !answer;
@@ -186,10 +187,11 @@ function GamePage() {
   }, [gameEnded, gameEndTime]);
 
   function handleSet(cards) {
+    const timestamp = Date.now();
     const event = {
       ...eventFromCards(cards),
       user: "player",
-      time: Date.now(),
+      time: timestamp,
     };
     
     // Add event to game data
@@ -197,7 +199,7 @@ function GamePage() {
       ...prevData,
       events: {
         ...prevData.events,
-        [Date.now()]: event,
+        [timestamp]: event,
       },
     }));
     
@@ -445,10 +447,7 @@ function GamePage() {
                 <Divider style={{ margin: "16px 0 8px" }} />
                 <Subheading>Game Record</Subheading>
                 <GameRecord
-                  history={Object.values(gameData.events || {}).map(event => ({
-                    ...event,
-                    time: event.time || 0,
-                  }))}
+                  history={history}
                   gameMode={gameMode}
                   startedAt={gameStartTime}
                 />
@@ -466,10 +465,7 @@ function GamePage() {
           >
             <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
               <GameRecord
-                history={Object.values(gameData.events || {}).map(event => ({
-                  ...event,
-                  time: event.time || 0,
-                }))}
+                history={history}
                 gameMode={gameMode}
                 startedAt={gameStartTime}
               />

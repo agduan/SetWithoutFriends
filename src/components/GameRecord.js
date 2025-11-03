@@ -121,8 +121,8 @@ function GameRecord({ history, gameMode, startedAt }) {
   }, [history]);
   
   const sortedItems = useMemo(() => {
-    if (!history) return [];
-    return Object.values(history).sort((a, b) => a.time - b.time);
+    if (!history || !Array.isArray(history)) return [];
+    return [...history].sort((a, b) => a.time - b.time);
   }, [history]);
 
   return (
