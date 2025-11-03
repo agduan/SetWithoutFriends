@@ -328,24 +328,6 @@ function GamePage() {
       </AppBar>
 
       <Grid container spacing={2}>
-        <Grid
-          item
-          xs={12}
-          sm={4}
-          md={3}
-          order={{ xs: 3, sm: 1 }}
-        >
-          <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
-            <GameRecord
-              history={Object.values(gameData.events || {}).map(event => ({
-                ...event,
-                time: event.time || 0,
-              }))}
-              gameMode={gameMode}
-              startedAt={gameStartTime}
-            />
-          </Paper>
-        </Grid>
         <Box clone order={{ xs: 1, sm: 2 }} position="relative">
           <Grid item xs={12} sm={8} md={6} className={classes.mainColumn}>
             {/* Backdrop; active when the game ends */}
@@ -459,6 +441,24 @@ function GamePage() {
             </Paper>
           </Grid>
         </Box>
+        <Grid
+          item
+          xs={12}
+          sm={4}
+          md={3}
+          order={{ xs: 3, sm: 1 }}
+        >
+          <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
+            <GameRecord
+              history={Object.values(gameData.events || {}).map(event => ({
+                ...event,
+                time: event.time || 0,
+              }))}
+              gameMode={gameMode}
+              startedAt={gameStartTime}
+            />
+          </Paper>
+        </Grid>
       </Grid>
 
       {/* Footer */}
