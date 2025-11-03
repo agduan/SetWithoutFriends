@@ -444,16 +444,16 @@ function GamePage() {
 
       {/* Footer */}
       <Box className={classes.footer}>
-        <Typography variant="body2">
-          The creator's best time is 01:17 ·{" "}
-          <Link 
-            href="https://github.com/agduan/SetWithoutFriends" 
-            style={{ color: "#1976d2" }}
-            underline="none"
-          >
-            GitHub
-          </Link>
-        </Typography>
+          <Typography variant="body2">
+            Made by Alexandra, whose best time is 01:17 ·{" "}
+            <Link 
+              href="https://github.com/agduan/SetWithoutFriends" 
+              color="primary"
+              underline="none"
+            >
+              GitHub
+            </Link>
+          </Typography>
       </Box>
     </Container>
   );
