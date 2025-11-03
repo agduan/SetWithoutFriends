@@ -18,6 +18,7 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 import { red } from "@material-ui/core/colors";
+import Hidden from "@material-ui/core/Hidden";
 import SettingsIcon from "@material-ui/icons/Settings";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import AlarmIcon from "@material-ui/icons/Alarm";
@@ -359,7 +360,7 @@ function GamePage() {
               selected={selected}
               onClick={handleClick}
               onClear={handleClear}
-              lastSet={findState.lastSet}
+              lastSet={[]}
               remaining={current.length - board.length}
               faceDown={gameMode === "memory" ? "deal" : ""}
             />
@@ -438,27 +439,43 @@ function GamePage() {
                   Restart
                 </Button>
               </Box>
+
+              {/* Mobile game record under timer/scoreboard */}
+              <Hidden smUp>
+                <Divider style={{ margin: "16px 0 8px" }} />
+                <Subheading>Game Record</Subheading>
+                <GameRecord
+                  history={Object.values(gameData.events || {}).map(event => ({
+                    ...event,
+                    time: event.time || 0,
+                  }))}
+                  gameMode={gameMode}
+                  startedAt={gameStartTime}
+                />
+              </Hidden>
             </Paper>
           </Grid>
         </Box>
-        <Grid
-          item
-          xs={12}
-          sm={4}
-          md={3}
-          order={{ xs: 3, sm: 1 }}
-        >
-          <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
-            <GameRecord
-              history={Object.values(gameData.events || {}).map(event => ({
-                ...event,
-                time: event.time || 0,
-              }))}
-              gameMode={gameMode}
-              startedAt={gameStartTime}
-            />
-          </Paper>
-        </Grid>
+        <Hidden xsDown>
+          <Grid
+            item
+            xs={12}
+            sm={4}
+            md={3}
+            order={{ xs: 3, sm: 1 }}
+          >
+            <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
+              <GameRecord
+                history={Object.values(gameData.events || {}).map(event => ({
+                  ...event,
+                  time: event.time || 0,
+                }))}
+                gameMode={gameMode}
+                startedAt={gameStartTime}
+              />
+            </Paper>
+          </Grid>
+        </Hidden>
       </Grid>
 
       {/* Footer */}
