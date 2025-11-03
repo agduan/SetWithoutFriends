@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import useSound from "use-sound";
 
+import AppBar from "@material-ui/core/AppBar";
 import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
@@ -13,10 +14,19 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Paper from "@material-ui/core/Paper";
 import Select from "@material-ui/core/Select";
 import Snackbar from "@material-ui/core/Snackbar";
+import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
+import { red } from "@material-ui/core/colors";
 import SettingsIcon from "@material-ui/icons/Settings";
 import RefreshIcon from "@material-ui/icons/Refresh";
+import AlarmIcon from "@material-ui/icons/Alarm";
+import SportsEsportsIcon from "@material-ui/icons/SportsEsports";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
+import Divider from "@material-ui/core/Divider";
 
 import failSfx1 from "../assets/failedSetSound1.mp3";
 import failSfx2 from "../assets/failedSetSound2.mp3";
@@ -36,16 +46,11 @@ import {
   modes,
   removeCard,
 } from "../game";
-import { formatANoun } from "../util";
+import { formatANoun, formatTime, generateName } from "../util";
+import Subheading from "../components/Subheading";
+import User from "../components/User";
 
 const useStyles = makeStyles((theme) => ({
-  header: {
-    padding: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    [theme.breakpoints.up("sm")]: {
-      display: "none", // Hide on desktop
-    },
-  },
   mainColumn: {
     display: "flex",
     alignItems: "center",
@@ -75,17 +80,21 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     height: "100%",
   },
-  settingsButton: {
-    position: "absolute",
-    top: theme.spacing(1),
-    right: theme.spacing(1),
-    zIndex: 10,
-  },
   sidebarHeader: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: theme.spacing(2),
+  },
+  timer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  alarm: {
+    color: red[700],
+    marginRight: 10,
+    marginBottom: 3,
   },
   footer: {
     marginTop: theme.spacing(4),
@@ -113,7 +122,9 @@ function GamePage() {
   const [gameStartTime, setGameStartTime] = useState(Date.now());
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
-  
+  const [gameEndTime, setGameEndTime] = useState(null);
+  const [userName] = useState(generateName());
+
   // Initialize game data
   const [gameData, setGameData] = useState(() => {
     const seed = generateSeed();
@@ -135,11 +146,12 @@ function GamePage() {
 
   // Update timer every second
   useEffect(() => {
+    if (gameEndTime) return;
     const timer = setInterval(() => {
       setCurrentTime(Date.now());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [gameEndTime]);
 
   const { random, deck } = useMemo(() => {
     const random = makeRandom(gameData.seed);
@@ -165,6 +177,12 @@ function GamePage() {
   }, [gameMode, gameData, random, deck]);
 
   const gameEnded = !answer;
+
+  useEffect(() => {
+    if (gameEnded && !gameEndTime) {
+      setGameEndTime(Date.now());
+    }
+  }, [gameEnded, gameEndTime]);
 
   function handleSet(cards) {
     const event = {
@@ -253,24 +271,13 @@ function GamePage() {
     if (newMode) {
       setGameMode(newMode);
     }
+    setGameEndTime(null);
   }
 
-  const elapsedTime = Math.floor((currentTime - gameStartTime) / 1000);
-  const minutes = Math.floor(elapsedTime / 60);
-  const seconds = elapsedTime % 60;
+  const elapsedTime = (gameEndTime || currentTime) - gameStartTime;
 
   return (
     <Container>
-      {/* Settings Button */}
-      <IconButton
-        className={classes.settingsButton}
-        onClick={() => setSettingsOpen(true)}
-        color="primary"
-        title="Settings"
-      >
-        <SettingsIcon />
-      </IconButton>
-
       <SettingsDialog
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -293,12 +300,32 @@ function GamePage() {
         />
       </Snackbar>
 
-      {/* Header - only visible on mobile */}
-      <Paper className={classes.header} elevation={0}>
-        <Typography variant="h5" align="center" style={{ fontWeight: 500 }}>
-          Set Without Friends
-        </Typography>
-      </Paper>
+      {/* Header */}
+      <AppBar position="relative" color="transparent" elevation={0}>
+        <Toolbar 
+          variant="dense" 
+          style={{ 
+            minHeight: 48,
+            paddingLeft: 0,
+            paddingRight: 0,
+            paddingTop: 0,
+            paddingBottom: 0
+          }}
+        >
+          <Typography variant="h6" style={{ flexGrow: 1, whiteSpace: "nowrap", margin: 0 }}>
+            Set Without Friends
+          </Typography>
+          <IconButton
+            onClick={() => setSettingsOpen(true)}
+            color="inherit"
+            title="Settings"
+            size="small"
+            style={{ marginRight: 0 }}
+          >
+            <SettingsIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
 
       <Grid container spacing={2}>
         <Box clone order={{ xs: 1, sm: 1 }} position="relative">
@@ -314,9 +341,6 @@ function GamePage() {
                 </Typography>
                 <Typography variant="body1">
                   Score: {score} sets
-                </Typography>
-                <Typography variant="body2">
-                  Time: {minutes}:{seconds.toString().padStart(2, '0')}
                 </Typography>
                 <Button
                   variant="contained"
@@ -344,24 +368,48 @@ function GamePage() {
         <Box clone order={{ xs: 2, sm: 2 }}>
           <Grid item xs={12} md={3}>
             <Paper className={classes.sidebar}>
-              <div className={classes.sidebarHeader}>
-                <Typography variant="h6">
-                  {modes[gameMode].name}
+              <div className={classes.timer} style={{ marginTop: 6 }}>
+                <AlarmIcon className={classes.alarm} fontSize="large" />
+                <Typography variant="h4" align="center">
+                  {formatTime(elapsedTime, true)}
                 </Typography>
               </div>
-              <Typography variant="body2" paragraph>
-                {modes[gameMode].description}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                <strong>Score:</strong> {score}
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Time:</strong> {minutes}:{seconds.toString().padStart(2, '0')}
-              </Typography>
-              <Typography variant="body2" gutterBottom>
-                <strong>Remaining:</strong> {current.length - board.length} cards
-              </Typography>
-              
+              <Divider style={{ margin: "8px 0" }} />
+              <Subheading>Scoreboard</Subheading>
+              <List dense disablePadding>
+                <ListItem>
+                  <ListItemIcon>
+                    <SportsEsportsIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    disableTypography
+                    primary={<User name={userName} rating={1200} color="blue" />}
+                  />
+                  <ListItemText
+                    primary={<strong>{score}</strong>}
+                    style={{
+                      flex: "0 0 36px",
+                      textAlign: "right",
+                    }}
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <SportsEsportsIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    disableTypography
+                    primary={<User name="Alexandra" rating={2882} color="purple" />}
+                  />
+                  <ListItemText
+                    primary={<strong>∞</strong>}
+                    style={{
+                      flex: "0 0 36px",
+                      textAlign: "right",
+                    }}
+                  />
+                </ListItem>
+              </List>
               <Box mt={3}>
                 <FormControl fullWidth variant="outlined" size="small">
                   <InputLabel id="mode-select-label">Game Mode</InputLabel>

@@ -1,7 +1,7 @@
 import { blueGrey, grey, indigo, red } from "@material-ui/core/colors";
 import { createTheme } from "@material-ui/core/styles";
 
-export const darkTheme = createTheme({
+const darkThemeConfig = {
   palette: {
     type: "dark",
     primary: {
@@ -63,9 +63,11 @@ export const darkTheme = createTheme({
     row: "#282828",
   },
   setFoundEntry: "rgba(130, 170, 100, 0.15)",
-});
+};
 
-export const lightTheme = createTheme({
+export const darkTheme = createTheme(darkThemeConfig);
+
+const lightThemeConfig = {
   palette: {
     type: "light",
     background: {
@@ -114,7 +116,9 @@ export const lightTheme = createTheme({
     row: "#fff",
   },
   setFoundEntry: "rgba(130, 170, 100, 0.15)",
-});
+};
+
+export const lightTheme = createTheme(lightThemeConfig);
 
 export function withCardColors(theme, colors) {
   return colors
