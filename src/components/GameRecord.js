@@ -20,14 +20,16 @@ const useStyles = makeStyles((theme) => ({
   recordPanel: {
     display: "flex",
     flexDirection: "column",
-    flexGrow: 1,
-    overflowY: "hidden",
+    height: "100%",
+    width: "100%",
+    minWidth: 0,
   },
   record: {
     overflowY: "auto",
     flexGrow: 1,
     overflowWrap: "anywhere",
     padding: "0 4px",
+    minWidth: 0,
   },
   logEntry: {
     marginBottom: "0.35em",

@@ -23,6 +23,8 @@ import SettingsIcon from "@material-ui/icons/Settings";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import AlarmIcon from "@material-ui/icons/Alarm";
 import SportsEsportsIcon from "@material-ui/icons/SportsEsports";
+import VolumeOffIcon from "@material-ui/icons/VolumeOff";
+import VolumeUpIcon from "@material-ui/icons/VolumeUp";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
@@ -55,7 +57,7 @@ import GameRecord from "../components/GameRecord";
 const useStyles = makeStyles((theme) => ({
   mainColumn: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "center",
   },
   snackbar: {
@@ -113,7 +115,7 @@ function generateSeed() {
 }
 
 function GamePage() {
-  const { volume } = useContext(SettingsContext);
+  const { volume, setVolume, layoutOrientation, cardOrientation } = useContext(SettingsContext);
   const classes = useStyles();
 
   const [gameMode, setGameMode] = useState("normal");
@@ -279,6 +281,27 @@ function GamePage() {
 
   const elapsedTime = (gameEndTime || currentTime) - gameStartTime;
 
+  // Calculate chat height based on layout settings
+  const isLandscape = layoutOrientation === "landscape";
+  const isHorizontal = cardOrientation === "horizontal";
+  
+  // Estimate game board height based on layout
+  // These values match the typical board dimensions for different configurations
+  // The game board adds 19px when showing "remaining cards" text
+  let chatHeight;
+  if (isLandscape) {
+    chatHeight = isHorizontal ? 400 : 294;
+  } else {
+    chatHeight = isHorizontal ? 600 : 475;
+  }
+  // Add extra height for the "remaining cards" text at bottom of game board
+  if (current && board) {
+    const hasRemainingText = current.length - board.length >= 0;
+    if (hasRemainingText) {
+      chatHeight += 19;
+    }
+  }
+
   return (
     <Container>
       <SettingsDialog
@@ -316,8 +339,17 @@ function GamePage() {
           }}
         >
           <Typography variant="h6" style={{ flexGrow: 1, whiteSpace: "nowrap", margin: 0 }}>
-            Set Without Friends
+            Set without Friends
           </Typography>
+          <IconButton
+            onClick={() => setVolume(volume === "on" ? "off" : "on")}
+            color="inherit"
+            title={volume === "on" ? "Mute sounds" : "Unmute sounds"}
+            size="small"
+            style={{ marginRight: 8 }}
+          >
+            {volume === "on" ? <VolumeUpIcon /> : <VolumeOffIcon />}
+          </IconButton>
           <IconButton
             onClick={() => setSettingsOpen(true)}
             color="inherit"
@@ -343,7 +375,7 @@ function GamePage() {
                   Game complete!
                 </Typography>
                 <Typography variant="body1">
-                  Score: {score} sets
+                  {score} sets found
                 </Typography>
                 <Button
                   variant="contained"
@@ -374,7 +406,7 @@ function GamePage() {
               <div className={classes.timer} style={{ marginTop: 6 }}>
                 <AlarmIcon className={classes.alarm} fontSize="large" />
                 <Typography variant="h4" align="center">
-                  {formatTime(elapsedTime, true)}
+                  {formatTime(elapsedTime, !gameEnded)}
                 </Typography>
               </div>
               <Divider style={{ margin: "8px 0" }} />
@@ -442,19 +474,23 @@ function GamePage() {
                 </Button>
               </Box>
 
-              {/* Mobile game record under timer/scoreboard */}
-              <Hidden smUp>
-                <Divider style={{ margin: "16px 0 8px" }} />
-                <Subheading>Game Record</Subheading>
+            </Paper>
+          </Grid>
+        </Box>
+        {/* Mobile game record under timer/scoreboard */}
+        <Hidden smUp>
+          <Box clone order={{ xs: 3 }}>
+            <Grid item xs={12}>
+              <Paper style={{ display: "flex", height: chatHeight, padding: 8, overflow: "hidden" }}>
                 <GameRecord
                   history={history}
                   gameMode={gameMode}
                   startedAt={gameStartTime}
                 />
-              </Hidden>
-            </Paper>
-          </Grid>
-        </Box>
+              </Paper>
+            </Grid>
+          </Box>
+        </Hidden>
         <Hidden xsDown>
           <Grid
             item
@@ -463,7 +499,7 @@ function GamePage() {
             md={3}
             order={{ xs: 3, sm: 1 }}
           >
-            <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
+            <Paper style={{ display: "flex", height: chatHeight, padding: 8, overflow: "hidden" }}>
               <GameRecord
                 history={history}
                 gameMode={gameMode}

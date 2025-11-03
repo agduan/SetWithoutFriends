@@ -10,8 +10,6 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import FormLabel from "@material-ui/core/FormLabel";
 import Radio from "@material-ui/core/Radio";
 import RadioGroup from "@material-ui/core/RadioGroup";
-import Switch from "@material-ui/core/Switch";
-import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/core/styles";
 
 import { SettingsContext } from "../context";
@@ -28,8 +26,6 @@ const useStyles = makeStyles((theme) => ({
 function SettingsDialog({ open, onClose }) {
   const classes = useStyles();
   const {
-    volume,
-    setVolume,
     layoutOrientation,
     setLayoutOrientation,
     cardOrientation,
@@ -52,23 +48,6 @@ function SettingsDialog({ open, onClose }) {
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Settings</DialogTitle>
       <DialogContent>
-        {/* Sound */}
-        <div className={classes.section}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={volume === "on"}
-                onChange={(e) => setVolume(e.target.checked ? "on" : "off")}
-                color="primary"
-              />
-            }
-            label="Sound Effects"
-          />
-          <Typography variant="caption" display="block" color="textSecondary">
-            Play sounds for correct and incorrect sets
-          </Typography>
-        </div>
-
         {/* Board Layout */}
         <div className={classes.section}>
           <FormControl component="fieldset" className={classes.formControl}>
