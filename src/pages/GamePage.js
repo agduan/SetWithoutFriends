@@ -49,6 +49,7 @@ import {
 import { formatANoun, formatTime } from "../util";
 import Subheading from "../components/Subheading";
 import User from "../components/User";
+import GameRecord from "../components/GameRecord";
 
 const useStyles = makeStyles((theme) => ({
   mainColumn: {
@@ -327,8 +328,26 @@ function GamePage() {
       </AppBar>
 
       <Grid container spacing={2}>
-        <Box clone order={{ xs: 1, sm: 1 }} position="relative">
-          <Grid item xs={12} md={9} className={classes.mainColumn}>
+        <Grid
+          item
+          xs={12}
+          sm={4}
+          md={3}
+          order={{ xs: 3, sm: 1 }}
+        >
+          <Paper style={{ display: "flex", height: "100%", padding: 8 }}>
+            <GameRecord
+              history={Object.values(gameData.events || {}).map(event => ({
+                ...event,
+                time: event.time || 0,
+              }))}
+              gameMode={gameMode}
+              startedAt={gameStartTime}
+            />
+          </Paper>
+        </Grid>
+        <Box clone order={{ xs: 1, sm: 2 }} position="relative">
+          <Grid item xs={12} sm={8} md={6} className={classes.mainColumn}>
             {/* Backdrop; active when the game ends */}
             <div
               className={classes.doneOverlay}
@@ -364,7 +383,7 @@ function GamePage() {
             />
           </Grid>
         </Box>
-        <Box clone order={{ xs: 2, sm: 2 }}>
+        <Box clone order={{ xs: 2, sm: 3 }}>
           <Grid item xs={12} md={3}>
             <Paper className={classes.sidebar}>
               <div className={classes.timer} style={{ marginTop: 6 }}>
