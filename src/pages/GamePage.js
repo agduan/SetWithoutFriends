@@ -46,7 +46,7 @@ import {
   modes,
   removeCard,
 } from "../game";
-import { formatANoun, formatTime, generateName } from "../util";
+import { formatANoun, formatTime } from "../util";
 import Subheading from "../components/Subheading";
 import User from "../components/User";
 
@@ -123,8 +123,7 @@ function GamePage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [gameEndTime, setGameEndTime] = useState(null);
-  const [userName] = useState(generateName());
-
+  
   // Initialize game data
   const [gameData, setGameData] = useState(() => {
     const seed = generateSeed();
@@ -383,7 +382,7 @@ function GamePage() {
                   </ListItemIcon>
                   <ListItemText
                     disableTypography
-                    primary={<User name={userName} rating={1200} color="blue" />}
+                    primary={<User name="You" rating={1200} color="red" />}
                   />
                   <ListItemText
                     primary={<strong>{score}</strong>}
@@ -399,7 +398,7 @@ function GamePage() {
                   </ListItemIcon>
                   <ListItemText
                     disableTypography
-                    primary={<User name="Alexandra" rating={2882} color="purple" />}
+                    primary={<User name="Alexandra" rating={2882} color="blue" />}
                   />
                   <ListItemText
                     primary={<strong>∞</strong>}
@@ -433,10 +432,9 @@ function GamePage() {
                   variant="contained"
                   color="primary"
                   fullWidth
-                  startIcon={<RefreshIcon />}
                   onClick={() => handleNewGame()}
                 >
-                  Restart Game
+                  Restart
                 </Button>
               </Box>
             </Paper>
