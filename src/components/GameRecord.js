@@ -54,26 +54,26 @@ const useStyles = makeStyles((theme) => ({
 function analyzeSetCharacteristics(cards) {
   const traits = cards.map(cardTraits);
   const [t1, t2, t3] = traits;
-  
+
+  // console.log('Card traits:', traits);
+
   // Check each attribute
   const colorShared = t1.color === t2.color && t2.color === t3.color;
   const numberShared = t1.number === t2.number && t2.number === t3.number;
   const shapeShared = t1.shape === t2.shape && t2.shape === t3.shape;
   const shadingShared = t1.shade === t2.shade && t2.shade === t3.shade;
-  
+
+  // console.log('Shared checks:', {
+  //   colorShared,
+  //   numberShared,
+  //   shapeShared,
+  //   shadingShared
+  // });
+
   const sharedCount = [colorShared, numberShared, shapeShared, shadingShared].filter(Boolean).length;
-  
-  let sharedType = null;
-  if (sharedCount === 1) {
-    if (colorShared) sharedType = "Color";
-    else if (numberShared) sharedType = "Number";
-    else if (shapeShared) sharedType = "Shape";
-    else if (shadingShared) sharedType = "Shading";
-  }
-  
+
   return {
     sharedCount,
-    sharedType,
     colorShared,
     numberShared,
     shapeShared,
@@ -106,7 +106,9 @@ function GameRecord({ history, gameMode, startedAt }) {
     history.forEach((event) => {
       if (event.c1 && event.c2 && event.c3) {
         const analysis = analyzeSetCharacteristics([event.c1, event.c2, event.c3]);
-        
+
+        // console.log('Analyzing set:', [event.c1, event.c2, event.c3], 'Analysis:', analysis);
+
         if (analysis.sharedCount === 0) {
           stats.noneShared++;
         } else {
@@ -165,22 +167,40 @@ function GameRecord({ history, gameMode, startedAt }) {
             </div>
           </div>
         ) : (
-          sortedItems.map((item, index) => (
-            <div key={index} className={classes.logEntry}>
-              <div className={classes.logEntryText}>
-                <Typography variant="subtitle2">
-                  {formatTime(item.time - startedAt, true)} - Set found
-                </Typography>
-              </div>
-              {item.c1 && item.c2 && item.c3 && (
-                <div>
-                  <SetCard size="sm" value={item.c1} />
-                  <SetCard size="sm" value={item.c2} />
-                  <SetCard size="sm" value={item.c3} />
+          sortedItems.map((item, index) => {
+            const sharedCharacteristics = item.c1 && item.c2 && item.c3 ?
+              (() => {
+                const analysis = analyzeSetCharacteristics([item.c1, item.c2, item.c3]);
+                const shared = [];
+                if (analysis.colorShared) shared.push('color');
+                if (analysis.numberShared) shared.push('number');
+                if (analysis.shapeShared) shared.push('shape');
+                if (analysis.shadingShared) shared.push('shading');
+                return shared.length > 0 ? `(${shared.join(', ')})` : '';
+              })() : '';
+
+            return (
+              <div key={index} className={classes.logEntry}>
+                <div className={classes.logEntryText} style={{ display: 'flex', flexDirection: 'column' }}>
+                  <Typography variant="subtitle2">
+                    {formatTime(item.time - startedAt, true)} - Set found
+                  </Typography>
+                  {sharedCharacteristics && (
+                    <Typography variant="caption" style={{ color: '#888', marginTop: -1}}>
+                      {sharedCharacteristics}
+                    </Typography>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
+                {item.c1 && item.c2 && item.c3 && (
+                  <div>
+                    <SetCard size="sm" value={item.c1} />
+                    <SetCard size="sm" value={item.c2} />
+                    <SetCard size="sm" value={item.c3} />
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </section>
