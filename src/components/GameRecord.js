@@ -109,12 +109,12 @@ function GameRecord({ history, gameMode, startedAt }) {
         
         if (analysis.sharedCount === 0) {
           stats.noneShared++;
-        } else if (analysis.sharedCount === 1) {
-          // Count sets where exactly one attribute is shared
+        } else {
+          // Count each shared characteristic separately (can have multiple)
           if (analysis.colorShared) stats.color++;
-          else if (analysis.numberShared) stats.number++;
-          else if (analysis.shapeShared) stats.shape++;
-          else if (analysis.shadingShared) stats.shading++;
+          if (analysis.numberShared) stats.number++;
+          if (analysis.shapeShared) stats.shape++;
+          if (analysis.shadingShared) stats.shading++;
         }
       }
     });
