@@ -520,6 +520,13 @@ function GamePage() {
               underline="none"
             >
               GitHub
+            </Link> ·{" "}
+            <Link 
+              href="https://en.wikipedia.org/wiki/Set_(card_game)" 
+              color="primary"
+              underline="none"
+            >
+              What is SET?
             </Link>
           </Typography>
       </Box>
